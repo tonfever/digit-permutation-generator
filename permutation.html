@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Permutation Generator</title>
+    <!-- Load Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Use Inter font */
+        body {
+            font-family: "Inter", sans-serif;
+        }
+        /* Simple transition for UI elements */
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md">
+        <!-- Main application card -->
+        <div class="bg-gray-800 shadow-xl rounded-2xl p-6 md:p-8">
+            <h1 class="text-3xl font-bold text-center text-blue-400 mb-2">
+                Number Permutation Generator
+            </h1>
+            <p class="text-center text-gray-400 mb-6">
+                Enter a number to find all unique permutations of its digits.
+            </p>
+
+            <!-- Input and Button -->
+            <div class="space-y-4">
+                <input
+                    type="text"
+                    id="numberInput"
+                    placeholder="e.g., 123 or 122"
+                    class="w-full p-4 bg-gray-700 border-2 border-gray-600 rounded-lg text-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                >
+                <button
+                    id="generateButton"
+                    class="w-full p-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all shadow-lg"
+                >
+                    Generate
+                </button>
+            </div>
+
+            <!-- Error Message Area -->
+            <div id="error" class="text-red-400 text-center font-medium mt-4 hidden"></div>
+
+            <!-- Results Section -->
+            <div id="resultsWrapper" class="mt-8 hidden">
+                <div class="flex justify-between items-center mb-4">
+                     <h2 class="text-xl font-semibold text-gray-200">
+                        Unique Permutations
+                    </h2>
+                    <span id="resultCount" class="text-sm font-medium bg-gray-700 text-blue-300 px-3 py-1 rounded-full"></span>
+                </div>
+               
+                <!-- Grid for results -->
+                <div
+                    id="results"
+                    class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 bg-gray-900/50 p-4 rounded-lg max-h-60 overflow-y-auto"
+                >
+                    <!-- Permutations will be injected here -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Get references to our DOM elements
+        const input = document.getElementById('numberInput');
+        const button = document.getElementById('generateButton');
+        const error = document.getElementById('error');
+        const resultsWrapper = document.getElementById('resultsWrapper');
+        const resultsContainer = document.getElementById('results');
+        const resultCount = document.getElementById('resultCount');
+
+        // Listen for button click
+        button.addEventListener('click', handleGenerate);
+        
+        // Allow pressing Enter to generate
+        input.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                handleGenerate();
+            }
+        });
+
+        function handleGenerate() {
+            // 1. Reset the UI
+            error.classList.add('hidden');
+            resultsWrapper.classList.add('hidden');
+            resultsContainer.innerHTML = '';
+            
+            // 2. Get and validate the input
+            const inputValue = input.value.trim();
+            
+            // Use regex to check if it's only digits
+            if (!/^\d+$/.test(inputValue)) {
+                error.textContent = 'Please enter a valid number (digits only).';
+                error.classList.remove('hidden');
+                return;
+            }
+
+            // 3. Find permutations
+            // We use a Set to automatically handle duplicates (fulfills Story 2)
+            const resultSet = new Set();
+            
+            // Call our recursive permutation function
+            findPermutations(inputValue, "", resultSet);
+
+            // 4. Sort and display the results
+            // Convert Set to Array, sort numerically, then display
+            const sortedResults = Array.from(resultSet)
+                                     .map(Number) // Convert strings to numbers for correct sorting
+                                     .sort((a, b) => a - b); 
+
+            if (sortedResults.length > 0) {
+                resultCount.textContent = `${sortedResults.length} found`;
+                sortedResults.forEach(perm => {
+                    const resultElement = document.createElement('div');
+                    resultElement.className = 'bg-gray-700 p-3 rounded-md text-center font-mono text-lg text-white';
+                    resultElement.textContent = perm;
+                    resultsContainer.appendChild(resultElement);
+                });
+                resultsWrapper.classList.remove('hidden');
+            } else {
+                error.textContent = 'No permutations found.';
+                error.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Recursive function to find all permutations.
+         * This is a "backtracking" algorithm.
+         *
+         * @param {string} remainingChars - The digits we still need to place.
+         * @param {string} currentPerm - The permutation we've built so far.
+         * @param {Set<string>} resultSet - The Set to store unique results.
+         */
+        function findPermutations(remainingChars, currentPerm, resultSet) {
+            // Base Case: If no characters are remaining,
+            // we have a complete permutation. Add it to the set.
+            if (remainingChars.length === 0) {
+                resultSet.add(currentPerm);
+                return;
+            }
+
+            // Recursive Step:
+            // For each character in the remaining string...
+            for (let i = 0; i < remainingChars.length; i++) {
+                // 1. Take one character out.
+                const char = remainingChars[i];
+                
+                // 2. Form the new 'remaining' string without that character.
+                const newRemaining = remainingChars.substring(0, i) + remainingChars.substring(i + 1);
+                
+                // 3. Make a recursive call, adding the character to our current permutation.
+                findPermutations(newRemaining, currentPerm + char, resultSet);
+            }
+        }
+
+    </script>
+</body>
+</html>
